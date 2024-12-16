@@ -9,6 +9,7 @@ async function bootstrap() {
     .setTitle('Mutual Funds Apis')
     .setDescription('Mutual Funds Apis description')
     .setVersion('0.1')
+    .addBearerAuth()
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, documentFactory);

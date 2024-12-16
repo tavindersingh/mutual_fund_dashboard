@@ -27,12 +27,12 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() loginDto: SignupDto) {
-    const user = await this.authService.login(loginDto);
+    const tokens = await this.authService.login(loginDto);
 
     return {
       success: true,
       message: 'User logged in successfully',
-      user,
+      tokens,
     };
   }
 }
