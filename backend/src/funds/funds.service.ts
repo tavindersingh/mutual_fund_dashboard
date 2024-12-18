@@ -4,6 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as fs from 'fs';
 import * as readline from 'readline';
 import { lastValueFrom } from 'rxjs';
+import { CreateFundHistoryDto } from 'src/fund-history/dto/create-fund-history.dto';
+import { FundHistoryService } from 'src/fund-history/fund-history.service';
 import { FundHouse } from 'src/fund-houses/entities/fund-house.entity';
 import { FundHousesService } from 'src/fund-houses/fund-houses.service';
 import { FundSchemeType } from 'src/fund-scheme-types/entities/fund-scheme-type.entity';
@@ -12,8 +14,6 @@ import { FindOptionsWhere, Repository } from 'typeorm';
 import { CreateFundDto } from './dto/create-fund.dto';
 import { QueryFundDto } from './dto/query-fund.dto';
 import { Fund } from './entities/fund.entity';
-import { FundHistoryService } from 'src/fund-history/fund-history.service';
-import { CreateFundHistoryDto } from 'src/fund-history/dto/create-fund-history.dto';
 
 @Injectable()
 export class FundsService {
@@ -26,9 +26,15 @@ export class FundsService {
   ) {}
 
   async createBulk(createFundDtoList: CreateFundDto[]) {
-    const result = await this.fundRepository.save(createFundDtoList);
+    const result = await this.fundRepository
+      .createQueryBuilder()
+      .insert()
+      .into(Fund)
+      .values(createFundDtoList)
+      .orIgnore()
+      .execute();
 
-    console.log(result.length, ' funds saved');
+    console.log(result.identifiers.length, ' funds saved');
   }
 
   async findAll(queryFundDto: QueryFundDto): Promise<Fund[]> {
@@ -63,7 +69,7 @@ export class FundsService {
 
   async downloadAndSaveData(): Promise<void> {
     const url = 'https://www.amfiindia.com/spages/NAVAll.txt';
-    const filePath = './NAVAll.txt';
+    const filePath = './tmp/NAVAll.txt';
 
     const request = this.httpService.get(url, {
       responseType: 'stream',
@@ -85,49 +91,57 @@ export class FundsService {
   }
 
   private async parseAndSaveData(filePath: string): Promise<void> {
-    const fileStream = fs.createReadStream(filePath);
-    const rl = readline.createInterface({
-      input: fileStream,
-      crlfDelay: Infinity,
-    });
-
     let currentFundHouse: FundHouse | null = null;
     let currentFundSchemeType: FundSchemeType | null = null;
 
     const createFundDtoList: CreateFundDto[] = [];
     const createFundHistoryList: CreateFundHistoryDto[] = [];
 
+    const exisitingFundHouses = await this.fundHouseService.findAll();
+    const exisitingFundSchemeTypes = await this.fundSchemeTypeService.findAll();
+
+    const fileStream = fs.createReadStream(filePath);
+    const rl = readline.createInterface({
+      input: fileStream,
+      crlfDelay: Infinity,
+    });
+
     try {
       for await (const line of rl) {
         const trimmedLine = line.trim();
 
         if (trimmedLine.startsWith('Close Ended Schemes')) {
-          break;
+          continue;
         }
 
         if (trimmedLine.endsWith('Mutual Fund')) {
-          currentFundHouse = await this.fundHouseService.findOne({
-            name: trimmedLine,
-          });
+          currentFundHouse = exisitingFundHouses.find(
+            (fundHouse) => fundHouse.name === trimmedLine,
+          );
 
           if (!currentFundHouse) {
+            console.log('Creating fund house:', trimmedLine);
             currentFundHouse = await this.fundHouseService.create({
               name: trimmedLine,
             });
+
+            exisitingFundHouses.push(currentFundHouse);
           }
         } else if (trimmedLine.startsWith('Open Ended Schemes')) {
           const schemeTypeName =
             this.extractTextBetweenParentheses(trimmedLine) || trimmedLine;
 
-          console.log('Adding Fund Scheme Type:', schemeTypeName);
-          currentFundSchemeType = await this.fundSchemeTypeService.findOne({
-            name: schemeTypeName,
-          });
+          currentFundSchemeType = exisitingFundSchemeTypes.find(
+            (fundSchemeType) => fundSchemeType.name === schemeTypeName,
+          );
 
           if (!currentFundSchemeType) {
+            console.log('Creating fund scheme type:', schemeTypeName);
             currentFundSchemeType = await this.fundSchemeTypeService.create({
               name: schemeTypeName,
             });
+
+            exisitingFundSchemeTypes.push(currentFundSchemeType);
           }
         } else if (currentFundHouse && !trimmedLine.startsWith('Scheme Code')) {
           const fields = trimmedLine.split(';');
