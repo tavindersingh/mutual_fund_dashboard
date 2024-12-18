@@ -10,6 +10,7 @@ import { FundsModule } from './funds/funds.module';
 import { FundHousesModule } from './fund-houses/fund-houses.module';
 import { FundSchemeTypesModule } from './fund-scheme-types/fund-scheme-types.module';
 import { FundHistoryModule } from './fund-history/fund-history.module';
+import { PortfoliosModule } from './portfolios/portfolios.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { FundHistoryModule } from './fund-history/fund-history.module';
     FundHousesModule,
     FundSchemeTypesModule,
     FundHistoryModule,
+    PortfoliosModule,
   ],
   controllers: [AppController],
   providers: [AppService],
