@@ -1,23 +1,18 @@
 import { AxiosError } from "axios";
-import { ref } from "vue";
 import { apiClient } from "../helpers/api_client";
-import { Tokens } from "../models/Tokens";
-import { TokenResponse } from "../models/TokensResponse";
 import { BaseResponse } from "../models/BaseResponse";
+import { TokenResponse } from "../models/TokensResponse";
 
 export const useAuth = () => {
-  const isLoggedIn = ref(false);
-  const tokens = ref<Tokens | undefined>(undefined);
-
-  const login = async (email: string, password: string) => {
+  const login = async (
+    email: string,
+    password: string
+  ): Promise<TokenResponse> => {
     try {
       const response = await apiClient.post<TokenResponse>("/auth/login", {
         email,
         password,
       });
-
-      isLoggedIn.value = true;
-      tokens.value = response.data.tokens;
 
       return response.data;
     } catch (error) {
@@ -57,8 +52,6 @@ export const useAuth = () => {
   };
 
   return {
-    isLoggedIn,
-    tokens,
     login,
     signup,
   };

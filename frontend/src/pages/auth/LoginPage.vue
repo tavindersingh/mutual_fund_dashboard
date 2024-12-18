@@ -4,10 +4,12 @@ import { useRouter } from "vue-router";
 import { toast } from "vue3-toastify";
 import Button from "../../components/common/Button.vue";
 import { useAuth } from "../../composables/useAuth";
+import { useSessionStore } from "../../stores/useSessionStore";
 
 const router = useRouter();
 
 const { login } = useAuth();
+const sessionStore = useSessionStore();
 
 const isLoading = ref(false);
 
@@ -22,6 +24,8 @@ const onLoginFormSubmit = async (event: Event) => {
 
   if (response.success) {
     toast.success(response.message);
+
+    sessionStore.startSession(response.tokens!);
 
     setTimeout(() => {
       router.replace("/");

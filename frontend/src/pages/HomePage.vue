@@ -1,10 +1,15 @@
 <script setup lang="ts">
-import { useAuth } from "../composables/useAuth";
+import FundsListView from "../components/FundsListView.vue";
+import { useSessionStore } from "../stores/useSessionStore";
 
-const { tokens } = useAuth();
+const sessionStore = useSessionStore();
 </script>
 
 <template>
-  <h1>Home Page</h1>
-  <p>Tokens: {{ tokens }}</p>
+  <div class="h-screen container mx-auto flex w-full">
+    <div class="flex-1">
+      <FundsListView />
+    </div>
+    <div class="w-1/3"></div>
+  </div>
 </template>
