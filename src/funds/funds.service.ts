@@ -8,9 +8,12 @@ import { FundHouse } from 'src/fund-houses/entities/fund-house.entity';
 import { FundHousesService } from 'src/fund-houses/fund-houses.service';
 import { FundSchemeType } from 'src/fund-scheme-types/entities/fund-scheme-type.entity';
 import { FundSchemeTypesService } from 'src/fund-scheme-types/fund-scheme-types.service';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { CreateFundDto } from './dto/create-fund.dto';
+import { QueryFundDto } from './dto/query-fund.dto';
 import { Fund } from './entities/fund.entity';
+import { FundHistoryService } from 'src/fund-history/fund-history.service';
+import { CreateFundHistoryDto } from 'src/fund-history/dto/create-fund-history.dto';
 
 @Injectable()
 export class FundsService {
@@ -19,12 +22,43 @@ export class FundsService {
     @InjectRepository(Fund) private readonly fundRepository: Repository<Fund>,
     private readonly fundHouseService: FundHousesService,
     private readonly fundSchemeTypeService: FundSchemeTypesService,
+    private readonly fundHistoryService: FundHistoryService,
   ) {}
 
   async createBulk(createFundDtoList: CreateFundDto[]) {
-    const result = await this.fundRepository.insert(createFundDtoList);
+    const result = await this.fundRepository.save(createFundDtoList);
 
-    console.log(result.identifiers.length, ' funds created');
+    console.log(result.length, ' funds saved');
+  }
+
+  async findAll(queryFundDto: QueryFundDto): Promise<Fund[]> {
+    const page = queryFundDto.page || 1;
+    const pageSize = queryFundDto.pageSize || 10;
+
+    const skip = (page - 1) * pageSize;
+
+    const query: FindOptionsWhere<Fund> = {};
+
+    if (queryFundDto.fundHouse) {
+      const fundHouse = await this.fundHouseService.findOne({
+        name: queryFundDto.fundHouse,
+      });
+      query.fundHouse = fundHouse;
+    }
+
+    if (queryFundDto.fundSchemeType) {
+      const fundSchemeType = await this.fundSchemeTypeService.findOne({
+        name: queryFundDto.fundSchemeType,
+      });
+      query.fundSchemeType = fundSchemeType;
+    }
+
+    return await this.fundRepository.find({
+      where: query,
+      skip,
+      take: pageSize,
+      relations: ['fundHouse', 'fundSchemeType'],
+    });
   }
 
   async downloadAndSaveData(): Promise<void> {
@@ -61,6 +95,7 @@ export class FundsService {
     let currentFundSchemeType: FundSchemeType | null = null;
 
     const createFundDtoList: CreateFundDto[] = [];
+    const createFundHistoryList: CreateFundHistoryDto[] = [];
 
     try {
       for await (const line of rl) {
@@ -112,11 +147,18 @@ export class FundsService {
               fundHouseId: currentFundHouse.id,
               fundSchemeTypeId: currentFundSchemeType.id,
             });
+
+            createFundHistoryList.push({
+              fundSchemeCode: fields[0].trim(),
+              netAssetValue: isNaN(netAssetValue) ? 0 : netAssetValue,
+              date: fields[5].trim(),
+            });
           }
         }
       }
 
       await this.createBulk(createFundDtoList);
+      await this.fundHistoryService.bulkCreate(createFundHistoryList);
     } catch (error) {
       console.error('Error parsing and saving data:', error);
     }

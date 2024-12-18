@@ -9,6 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 import { FundsModule } from './funds/funds.module';
 import { FundHousesModule } from './fund-houses/fund-houses.module';
 import { FundSchemeTypesModule } from './fund-scheme-types/fund-scheme-types.module';
+import { FundHistoryModule } from './fund-history/fund-history.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { FundSchemeTypesModule } from './fund-scheme-types/fund-scheme-types.mod
     FundsModule,
     FundHousesModule,
     FundSchemeTypesModule,
+    FundHistoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

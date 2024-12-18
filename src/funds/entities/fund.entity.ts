@@ -1,23 +1,14 @@
 import { FundHouse } from 'src/fund-houses/entities/fund-house.entity';
 import { FundSchemeType } from 'src/fund-scheme-types/entities/fund-scheme-type.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
 
 @Entity('funds')
 export class Fund {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column()
+  @PrimaryColumn()
   schemeCode: string;
 
   @Column()
   schemeName: string;
-
-  @Column('decimal', { precision: 10, scale: 4 })
-  netAssetValue: number;
-
-  @Column()
-  date: string;
 
   @Column()
   fundHouseId: number;
