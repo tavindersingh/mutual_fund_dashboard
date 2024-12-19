@@ -50,7 +50,7 @@ fetchPortfolioItems();
         <div>
           <h4>Current Value</h4>
           <p class="font-bold text-white">
-            {{ totalInvestedValue.toFixed(2) }}
+            {{ totalCurrentValue.toFixed(2) }}
           </p>
         </div>
 
@@ -62,7 +62,9 @@ fetchPortfolioItems();
       <div>
         <div>
           <h4>Invested</h4>
-          <p class="font-bold text-white">{{ totalCurrentValue.toFixed(2) }}</p>
+          <p class="font-bold text-white">
+            {{ totalInvestedValue.toFixed(2) }}
+          </p>
         </div>
       </div>
     </div>
