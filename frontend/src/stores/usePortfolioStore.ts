@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { apiClient } from "../helpers/api_client";
 import { BaseResponse } from "../models/BaseResponse";
+import { CreatePortfolioItem } from "../models/CreatePortfolioItem";
 import { PortfolioItem } from "../models/PortfolioItem";
 import { PortfolioResponse } from "../models/PortfolioResponse";
 import { useSessionStore } from "./useSessionStore";
@@ -37,8 +38,36 @@ export const usePortfolioStore = defineStore("portfolio", () => {
     }
   };
 
+  const addPortfolioItem = async (createPortfolioItem: CreatePortfolioItem) => {
+    try {
+      const response = await apiClient.post<BaseResponse>(
+        "/portfolios/add",
+        createPortfolioItem,
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStore.tokens?.accessToken}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        await getUserPortfolio();
+        return {
+          success: true,
+          message: "Portfolio item added successfully",
+        };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: "Failed to add portfolio item",
+      };
+    }
+  };
+
   return {
     portfolio,
     getUserPortfolio,
+    addPortfolioItem,
   };
 });

@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, VNodeRef } from "vue";
+import { Fund } from "../models/Fund";
 import { useFundsStore } from "../stores/useFundsStore";
+import AddPortfolioItemDialogView from "./AddPortfolioItemDialogView.vue";
+import { CreatePortfolioItem } from "../models/CreatePortfolioItem";
+import { usePortfolioStore } from "../stores/usePortfolioStore";
 
 const fundsStore = useFundsStore();
+const portfolioStore = usePortfolioStore();
 
 const isSuccess = ref(false);
 const isLoading = ref(false);
 const message = ref("");
+
+const selectedFund = ref<Fund | undefined>(undefined);
+
+const addPortfolioItemDialog = ref<VNodeRef | undefined>(undefined);
 
 onMounted(async () => {
   isLoading.value = true;
@@ -16,6 +25,16 @@ onMounted(async () => {
   isSuccess.value = response.success;
   message.value = response.message;
 });
+
+const selectFundToAdd = (fund: Fund) => {
+  selectedFund.value = fund;
+  addPortfolioItemDialog.value?.showModal();
+};
+
+const onAddPortfolioItem = async (createPortfolioItem: CreatePortfolioItem) => {
+  addPortfolioItemDialog.value?.close();
+  await portfolioStore.addPortfolioItem(createPortfolioItem);
+};
 </script>
 
 <template>
@@ -31,13 +50,32 @@ onMounted(async () => {
       <div
         v-for="fund in fundsStore.funds"
         :key="fund.schemeCode"
-        class="card bg-neutral text-neutral-content"
+        class="card bg-neutral text-neutral-content group cursor-pointer"
       >
-        <div class="card-body px-6 py-5">
-          <h3 class="card-title text-lg">{{ fund.schemeName }}</h3>
-          <p>{{ fund.fundSchemeType.name }}</p>
+        <div class="card-body px-6 py-5 relative">
+          <div>
+            <h3 class="card-title text-lg">{{ fund.schemeName }}</h3>
+            <p>{{ fund.fundSchemeType.name }}</p>
+          </div>
+          <div
+            class="hidden group-hover:block absolute right-4 -translate-y-1/2 top-1/2 duration-200"
+          >
+            <button class="btn" @click="() => selectFundToAdd(fund)">
+              Add
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
+
+  <dialog ref="addPortfolioItemDialog" class="modal">
+    <div class="modal-box w-11/12 h-[600px] max-w-3xl">
+      <AddPortfolioItemDialogView
+        v-if="selectedFund"
+        :selected-fund="selectedFund"
+        @add-portfolio-item="onAddPortfolioItem"
+      />
+    </div>
+  </dialog>
 </template>
