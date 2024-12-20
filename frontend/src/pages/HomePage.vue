@@ -1,9 +1,19 @@
 <script setup lang="ts">
+import { onMounted } from "vue";
+import { useRouter } from "vue-router";
 import FundsListView from "../components/FundsListView.vue";
 import UserPortfolioView from "../components/UserPortfolioView.vue";
 import { useSessionStore } from "../stores/useSessionStore";
 
 const sessionStore = useSessionStore();
+
+const router = useRouter();
+
+onMounted(() => {
+  if (!sessionStore.isLoggedIn) {
+    router.replace("/login");
+  }
+});
 </script>
 
 <template>
