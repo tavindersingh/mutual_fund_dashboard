@@ -14,7 +14,12 @@ export class FundHistoryService {
   ) {}
 
   async bulkCreate(fundHistoryList: CreateFundHistoryDto[]) {
-    const result = await this.fundHistoryRepository.insert(fundHistoryList);
+    // const result = await this.fundHistoryRepository.insert(fundHistoryList);
+
+    const result = await this.fundHistoryRepository.upsert(fundHistoryList, [
+      'date',
+      'fundSchemeCode',
+    ]);
 
     console.log(result.identifiers.length, ' funds history data added');
   }

@@ -1,13 +1,15 @@
 import { FundHouse } from 'src/fund-houses/entities/fund-house.entity';
 import { FundSchemeType } from 'src/fund-scheme-types/entities/fund-scheme-type.entity';
-import { Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, PrimaryColumn } from 'typeorm';
 
 @Entity('funds')
 export class Fund {
   @PrimaryColumn()
+  @Index()
   schemeCode: string;
 
   @Column()
+  @Index()
   schemeName: string;
 
   @Column()

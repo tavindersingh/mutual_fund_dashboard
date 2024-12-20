@@ -1,7 +1,14 @@
 import { Fund } from 'src/funds/entities/fund.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('fund_history')
+@Index(['date', 'fundSchemeCode'], { unique: true })
 export class FundHistory {
   @PrimaryGeneratedColumn()
   id: number;

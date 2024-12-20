@@ -1,5 +1,5 @@
 import { Fund } from 'src/funds/entities/fund.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('fund_scheme_types')
 export class FundSchemeType {
@@ -7,6 +7,7 @@ export class FundSchemeType {
   id: number;
 
   @Column({ unique: true })
+  @Index()
   name: string;
 
   @OneToMany(() => Fund, (fund) => fund.fundSchemeType)
