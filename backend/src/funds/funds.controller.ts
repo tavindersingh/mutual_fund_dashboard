@@ -24,6 +24,10 @@ export class FundsController {
     return {
       success: true,
       funds,
+      meta: {
+        page: queryFundDto.page || 1,
+        pageSize: queryFundDto.pageSize || 10,
+      },
     };
   }
 }
