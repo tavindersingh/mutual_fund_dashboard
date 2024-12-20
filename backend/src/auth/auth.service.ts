@@ -7,6 +7,7 @@ import { compareHashedPassword } from 'src/utils/helpers';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
 import { JwtPayload, Tokens } from './types';
+import { Timeout } from '@nestjs/schedule';
 
 @Injectable()
 export class AuthService {
@@ -63,5 +64,26 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  @Timeout(1000)
+  async signupDefaultUser() {
+    console.log('Creating default user...');
+    const email = this.configService.get<string>('USER_EMAIL');
+    const password = this.configService.get<string>('USER_PASSWORD');
+
+    const user = await this.userService.findOne({
+      email,
+    });
+
+    if (user) {
+      console.log('Done');
+      return;
+    }
+
+    await this.signup({
+      email,
+      password,
+    });
   }
 }

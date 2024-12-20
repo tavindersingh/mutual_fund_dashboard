@@ -1,5 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
+import { Interval, Timeout } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as fs from 'fs';
 import * as readline from 'readline';
@@ -67,6 +68,8 @@ export class FundsService {
     });
   }
 
+  @Timeout(1000)
+  @Interval(1000 * 60 * 60)
   async downloadAndSaveData(): Promise<void> {
     const url = 'https://www.amfiindia.com/spages/NAVAll.txt';
     const filePath = './tmp/NAVAll.txt';
@@ -182,5 +185,31 @@ export class FundsService {
     const regex = /\((.*?)\)/;
     const match = text.match(regex);
     return match && match[1].trim();
+  }
+
+  async loadPreviousData() {
+    console.log('Loading previous data...');
+    for (let i = 16; i < 19; i++) {
+      const url = `https://portal.amfiindia.com/DownloadNAVHistoryReport_Po.aspx?tp=1&frmdt=${i}-Dec-2024`;
+      const filePath = `./tmp/NAVAll__${i}.txt`;
+
+      const request = this.httpService.get(url, {
+        responseType: 'stream',
+      });
+
+      const response = await lastValueFrom(request);
+
+      const writer = fs.createWriteStream(filePath);
+      response.data.pipe(writer);
+
+      await new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+      });
+
+      console.log('File downloaded and saved successfully!');
+
+      await this.parseAndSaveData(filePath);
+    }
   }
 }
