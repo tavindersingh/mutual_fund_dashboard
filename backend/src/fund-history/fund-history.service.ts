@@ -35,8 +35,17 @@ export class FundHistoryService {
       query.fundSchemeCode = queryFundHistoryDto.fundSchemeCode;
     }
 
-    return await this.fundHistoryRepository.findOne({
+    let fundHistory = await this.fundHistoryRepository.findOne({
       where: query,
     });
+
+    if (!fundHistory && queryFundHistoryDto.fundSchemeCode) {
+      fundHistory = await this.fundHistoryRepository.findOne({
+        where: { fundSchemeCode: queryFundHistoryDto.fundSchemeCode },
+        order: { date: 'DESC' },
+      });
+    }
+
+    return fundHistory;
   }
 }
